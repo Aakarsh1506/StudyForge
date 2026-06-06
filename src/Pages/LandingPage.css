@@ -1,0 +1,363 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+/* ── TOKENS ──────────────────────────────────────────── */
+:root {
+  --black: #000000;
+  --bg: #0a0a0f;
+  --surface: #0f1220;
+  --border: rgba(255, 255, 255, 0.07);
+  --blue: #2563eb;
+  --blue-light: #3b82f6;
+  --blue-dim: rgba(59, 130, 246, 0.15);
+  --blue-icon-bg: rgba(59, 130, 246, 0.18);
+  --text: #ffffff;
+  --text-muted: #8b9ab3;
+  --font: "Inter", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAVBAR ──────────────────────────────────────────── */
+.lp-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2.5rem;
+  background: rgba(26, 35, 50, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lp-nav__logo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  letter-spacing: -0.02em;
+}
+
+.lp-nav__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ── BUTTONS ──────────────────────────────────────────── */
+.lp-btn {
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.lp-btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+}
+
+.lp-btn--ghost:hover {
+  border-color: var(--blue-light);
+  color: var(--blue-light);
+}
+
+.lp-btn--primary {
+  background: var(--blue);
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--blue);
+}
+
+.lp-btn--primary:hover {
+  background: var(--blue-light);
+}
+
+/* Navbar pill buttons — Login is filled, Sign Up is ghost */
+.lp-btn--nav-pill-primary {
+  background: var(--blue);
+  color: #fff;
+  border: 1.5px solid var(--blue);
+  padding: 0.5rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn--nav-pill-primary:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-light);
+}
+
+.lp-btn--nav-pill-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  padding: 0.5rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn--nav-pill-ghost:hover {
+  border-color: var(--blue-light);
+  color: var(--blue-light);
+}
+
+.lp-btn--pill-primary {
+  background: var(--blue);
+  color: #fff;
+  border: 1.5px solid var(--blue);
+  padding: 0.65rem 2rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn--pill-primary:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-light);
+}
+
+.lp-btn--pill-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  padding: 0.65rem 2rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-family: var(--font);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lp-btn--pill-ghost:hover {
+  border-color: var(--blue-light);
+  color: var(--blue-light);
+}
+
+/* ── HERO ──────────────────────────────────────────── */
+.lp-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 600px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 1.5rem;
+}
+
+.lp-hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  animation: fadeUp 0.8s ease both;
+}
+
+.lp-hero__title {
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--blue-light);
+}
+
+.lp-hero__tagline {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--text-muted);
+  font-weight: 400;
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.lp-hero__cta {
+  position: absolute;
+  bottom: 2.8rem;
+  left: 2.8rem;
+  display: flex;
+  gap: 1rem;
+  animation: fadeUp 0.8s 0.15s ease both;
+}
+
+/* ── FEATURES ──────────────────────────────────────── */
+.lp-features {
+  background: var(--bg);
+  padding: 6rem 2.5rem;
+}
+
+.lp-features__header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.lp-features__title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin-bottom: 0.75rem;
+}
+
+.lp-features__sub {
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.lp-features__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── CARDS ──────────────────────────────────────────── */
+.lp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.2rem 2rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  animation: fadeUp 0.6s ease both;
+}
+
+.lp-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 32px var(--blue-dim);
+  transform: translateY(-2px);
+}
+
+.lp-card__icon-wrap {
+  width: 52px;
+  height: 52px;
+  background: var(--blue-icon-bg);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.4rem;
+  color: var(--blue-light);
+}
+
+.lp-card__icon-wrap svg {
+  width: 24px;
+  height: 24px;
+}
+
+.lp-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.lp-card__desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  font-weight: 400;
+}
+
+/* ── FOOTER ──────────────────────────────────────────── */
+.lp-footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 2rem 2.5rem;
+}
+
+.lp-footer__inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-footer__logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  letter-spacing: -0.02em;
+}
+
+.lp-footer__copy {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lp-nav {
+    padding: 1rem 1.2rem;
+  }
+
+  .lp-hero__cta {
+    bottom: 1.5rem;
+    left: 1.2rem;
+  }
+
+  .lp-features {
+    padding: 4rem 1.2rem;
+  }
+
+  .lp-features__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-footer__inner {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
