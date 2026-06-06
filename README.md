@@ -1,16 +1,57 @@
-# React + Vite
+# StudyForge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+StudyForge is an AI-powered academic companion platform for students.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Organize notes and study materials with subject-wise folders.
+- Upload and manage PDFs, images, and academic resources.
+- Extract class schedules from uploaded timetables using OCR.
+- View daily classes and upcoming academic events.
+- Track assignments, deadlines, and attached resources.
+- Generate AI-powered flashcards from uploaded notes.
+- Create quizzes and receive performance feedback.
+- Generate personalized study plans based on exam schedules.
+- Manage all academic activities from a centralized dashboard.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Frontend
+- React
+- Vite
+- Tailwind CSS
+- React Router DOM
+- Axios
 
-## Expanding the ESLint configuration
+### Backend
+- Node.js
+- Express.js
+- JWT
+- bcrypt
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Database
+- MySQL
+
+### AI
+- Ollama
+- Qwen 3 / Gemma 3
+
+### OCR
+- Tesseract.js
+
+### File Storage
+- Cloudinary
+
+### Deployment
+- Netlify
+- Render
+
+## Project Structure
+
+```bash
+studyforge/
+├── frontend/
+├── backend/
+├── README.md
+└── .gitignore
+```
