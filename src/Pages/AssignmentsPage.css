@@ -679,3 +679,219 @@ body {
   color: var(--blue-light);
   background: var(--blue-dim);
 }
+
+/* ── TABS ── */
+.asgn-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.asgn-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.asgn-tab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+.asgn-tab--active {
+  color: var(--blue-light);
+  background: var(--blue-dim);
+}
+
+.asgn-tab--pastdue.asgn-tab--active {
+  color: #ff6b8a;
+  background: rgba(255, 80, 100, 0.1);
+}
+
+.asgn-tab__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  line-height: 1.4;
+}
+
+.asgn-tab__badge--red {
+  background: #ef4444;
+}
+
+/* ── CARD VARIANTS ── */
+.asgn-card--pastdue {
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+.asgn-card--pastdue:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.08);
+}
+
+.asgn-card--completed {
+  opacity: 0.7;
+}
+
+.asgn-card__icon--pastdue { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.asgn-card__icon--completed { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+
+.asgn-card__name--red { color: #f87171; }
+.asgn-card__name--muted { color: var(--text-muted); text-decoration: line-through; }
+
+/* ── COMPLETE BUTTON ── */
+.asgn-complete-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #fff;
+  background: #10b981;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.asgn-complete-btn:hover {
+  background: #34d399;
+  transform: translateY(-1px);
+}
+
+/* ── STATUS BADGES ── */
+.asgn-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.asgn-status-badge--done {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.asgn-status-badge--overdue {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── HEADER VARIANTS ── */
+.asgn-header__title--red { color: #f87171; }
+
+/* ── DETAIL VALUE VARIANTS ── */
+.asgn-detail__value--red { color: #f87171; }
+.asgn-detail__value--green { color: #34d399; }
+
+/* ── CELEBRATION ── */
+.asgn-celebrate {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease both;
+}
+
+.asgn-celebrate__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.asgn-celebrate__circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 60px rgba(16, 185, 129, 0.5);
+  animation: pulse 0.6s ease 0.3s both;
+}
+
+.asgn-celebrate__text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+
+.asgn-celebrate__sub {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── CONFETTI ── */
+.asgn-confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+}
+
+.asgn-confetti__piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confettiFall 2s ease-in both;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  100% { box-shadow: 0 0 0 30px rgba(16, 185, 129, 0); }
+}
+
+.asgn-detail-actions {
+  padding: 0.75rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+.asgn-header--detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
