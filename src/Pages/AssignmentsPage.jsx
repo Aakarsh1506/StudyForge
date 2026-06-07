@@ -25,10 +25,16 @@ export default function AssignmentsPage() {
   useEffect(() => { saveAssignments(assignments); }, [assignments]);
 
   useEffect(() => {
-    if (location.state?.openIndex !== undefined) {
-      setDetailIndex(location.state.openIndex);
+    if (location.state?.assignmentId) {
+      const index = assignments.findIndex(
+        a => a.id === location.state.assignmentId
+      );
+
+      if (index !== -1) {
+        setDetailIndex(index);
+      }
     }
-  }, []);
+  }, [assignments, location.state]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -57,7 +63,14 @@ export default function AssignmentsPage() {
 
   const addAssignment = () => {
     if (!form.name.trim() || !form.dueDate) return;
-    setAssignments([...assignments, { name: form.name.trim(), dueDate: form.dueDate, resources: form.resources, completed: false, createdAt: new Date().toISOString() }]);
+    setAssignments([...assignments, {
+      id: crypto.randomUUID(),
+      name: form.name.trim(),
+      dueDate: form.dueDate,
+      resources: form.resources,
+      completed: false,
+      createdAt: new Date().toISOString()
+    }]);
     setForm({ name: "", dueDate: "", resources: [] });
     setShowModal(false);
   };
@@ -153,8 +166,7 @@ export default function AssignmentsPage() {
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
-              {!isCompleted && (
-                <div className="asgn-card__menu-wrap" ref={openMenuIndex === globalIndex ? menuRef : null}>
+              <div className="asgn-card__menu-wrap" ref={openMenuIndex === globalIndex ? menuRef : null}>
                   <button className="asgn-three-dots"
                     onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === globalIndex ? null : globalIndex); }}>
                     <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -164,27 +176,33 @@ export default function AssignmentsPage() {
                     </svg>
                   </button>
                   {openMenuIndex === globalIndex && (
-                    <div className="asgn-dropdown">
-                      <button className="asgn-dropdown__item" onClick={(e) => { e.stopPropagation(); startRename(globalIndex); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        Rename
-                      </button>
-                      <button className="asgn-dropdown__item asgn-dropdown__item--delete" onClick={(e) => { e.stopPropagation(); deleteAssignment(globalIndex); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                        </svg>
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                      <div className="asgn-dropdown">
+
+                        {!isCompleted && (
+                          <button
+                            className="asgn-dropdown__item"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startRename(globalIndex);
+                            }}
+                          >
+                            Rename
+                          </button>
+                        )}
+
+                        <button
+                          className="asgn-dropdown__item asgn-dropdown__item--delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteAssignment(globalIndex);
+                          }}
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+                    )}
                 </div>
-              )}
             </div>
           );
         })}
