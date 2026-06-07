@@ -2,20 +2,27 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./AssignmentsPage.css";
 
+const STORAGE_KEY = "sf-assignments";
+
+const getAssignments = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+const saveAssignments = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
 export default function AssignmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [assignments, setAssignments] = useState(() => JSON.parse(localStorage.getItem("sf-assignments") || "[]"));
+  const [assignments, setAssignments] = useState(getAssignments);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", dueDate: "", resources: [] });
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [renameIndex, setRenameIndex] = useState(null);
   const [renameName, setRenameName] = useState("");
   const [detailIndex, setDetailIndex] = useState(null);
+  const [activeTab, setActiveTab] = useState("active");
+  const [celebrating, setCelebrating] = useState(false);
   const menuRef = useRef(null);
   const resourceInputRef = useRef(null);
 
-  useEffect(() => { localStorage.setItem("sf-assignments", JSON.stringify(assignments)); }, [assignments]);
+  useEffect(() => { saveAssignments(assignments); }, [assignments]);
 
   useEffect(() => {
     if (location.state?.openIndex !== undefined) {
@@ -31,37 +38,48 @@ export default function AssignmentsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const now = new Date();
+
+  const activeAssignments = assignments.filter(a => !a.completed && new Date(a.dueDate) >= now);
+  const completedAssignments = assignments.filter(a => a.completed);
+  const pastDueAssignments = assignments.filter(a => !a.completed && new Date(a.dueDate) < now);
+
   const handleResourceUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    const readers = files.map(file => new Promise(resolve => {
+    Promise.all(files.map(file => new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = (ev) => resolve({ name: file.name, type: file.type, data: ev.target.result, uploadedAt: new Date().toISOString() });
       reader.readAsDataURL(file);
-    }));
-    Promise.all(readers).then(newFiles => {
-      setForm(prev => ({ ...prev, resources: [...prev.resources, ...newFiles] }));
-    });
+    }))).then(newFiles => setForm(prev => ({ ...prev, resources: [...prev.resources, ...newFiles] })));
     e.target.value = "";
   };
 
   const addAssignment = () => {
     if (!form.name.trim() || !form.dueDate) return;
-    setAssignments([...assignments, { name: form.name.trim(), dueDate: form.dueDate, resources: form.resources, createdAt: new Date().toISOString() }]);
+    setAssignments([...assignments, { name: form.name.trim(), dueDate: form.dueDate, resources: form.resources, completed: false, createdAt: new Date().toISOString() }]);
     setForm({ name: "", dueDate: "", resources: [] });
     setShowModal(false);
   };
 
   const deleteAssignment = (index) => { setAssignments(assignments.filter((_, i) => i !== index)); setOpenMenuIndex(null); };
-
   const startRename = (index) => { setRenameIndex(index); setRenameName(assignments[index].name); setOpenMenuIndex(null); };
-
   const confirmRename = () => {
     if (!renameName.trim()) return;
     const updated = [...assignments];
     updated[renameIndex] = { ...updated[renameIndex], name: renameName.trim() };
-    setAssignments(updated);
-    setRenameIndex(null);
+    setAssignments(updated); setRenameIndex(null);
+  };
+
+  const markCompleted = (index) => {
+    setCelebrating(true);
+    setTimeout(() => {
+      const updated = [...assignments];
+      updated[index] = { ...updated[index], completed: true, completedAt: new Date().toISOString() };
+      setAssignments(updated);
+      setCelebrating(false);
+      setDetailIndex(null);
+    }, 2200);
   };
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -76,20 +94,119 @@ export default function AssignmentsPage() {
     </svg>
   );
 
+  const TabNav = () => (
+    <div className="asgn-tabs">
+      {[
+        { key: "active", label: "Active" },
+        { key: "completed", label: "Completed" },
+        { key: "pastdue", label: "Past Due" },
+      ].map(tab => (
+        <button key={tab.key}
+          className={`asgn-tab ${activeTab === tab.key ? "asgn-tab--active" : ""} ${tab.key === "pastdue" ? "asgn-tab--pastdue" : ""}`}
+          onClick={() => setActiveTab(tab.key)}>
+          {tab.label}
+          {tab.key === "active" && activeAssignments.length > 0 && <span className="asgn-tab__badge">{activeAssignments.length}</span>}
+          {tab.key === "pastdue" && pastDueAssignments.length > 0 && <span className="asgn-tab__badge asgn-tab__badge--red">{pastDueAssignments.length}</span>}
+        </button>
+      ))}
+    </div>
+  );
+
+  const CardList = ({ list, isPastDue, isCompleted }) => (
+    list.length === 0 ? (
+      <div className="asgn-empty" style={{ cursor: "default", opacity: 0.5 }}>
+        <div className="asgn-empty__icon" style={{ fontSize: "1.5rem" }}>
+          {isCompleted ? "✓" : isPastDue ? "!" : "+"}
+        </div>
+        <p className="asgn-empty__title">
+          {isCompleted ? "No completed assignments" : isPastDue ? "No past due assignments" : "No active assignments"}
+        </p>
+        <p className="asgn-empty__sub">
+          {isCompleted ? "Mark assignments as done to see them here" : isPastDue ? "You're all caught up!" : "Add a new assignment to get started"}
+        </p>
+      </div>
+    ) : (
+      <div className="asgn-grid">
+        {list.map((a, i) => {
+          const globalIndex = assignments.indexOf(a);
+          return (
+            <div key={i} className={`asgn-card ${isPastDue ? "asgn-card--pastdue" : ""} ${isCompleted ? "asgn-card--completed" : ""}`}
+              style={{ animationDelay: `${i * 0.06}s` }}
+              onClick={() => setDetailIndex(globalIndex)}>
+              <div className={`asgn-card__icon ${isPastDue ? "asgn-card__icon--pastdue" : isCompleted ? "asgn-card__icon--completed" : ""}`}>
+                <AssignmentIcon />
+              </div>
+              <div className="asgn-card__info">
+                <span className={`asgn-card__name ${isPastDue ? "asgn-card__name--red" : ""} ${isCompleted ? "asgn-card__name--muted" : ""}`}>{a.name}</span>
+                <span className="asgn-card__due">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  {isPastDue ? "Was due " : isCompleted ? "Completed " : "Due "}{formatDate(isCompleted ? a.completedAt : a.dueDate)}
+                </span>
+              </div>
+              <div className="asgn-card__arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
+              {!isCompleted && (
+                <div className="asgn-card__menu-wrap" ref={openMenuIndex === globalIndex ? menuRef : null}>
+                  <button className="asgn-three-dots"
+                    onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === globalIndex ? null : globalIndex); }}>
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                      <circle cx="5" cy="12" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="19" cy="12" r="1.5" />
+                    </svg>
+                  </button>
+                  {openMenuIndex === globalIndex && (
+                    <div className="asgn-dropdown">
+                      <button className="asgn-dropdown__item" onClick={(e) => { e.stopPropagation(); startRename(globalIndex); }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Rename
+                      </button>
+                      <button className="asgn-dropdown__item asgn-dropdown__item--delete" onClick={(e) => { e.stopPropagation(); deleteAssignment(globalIndex); }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )
+  );
+
   // ── DETAIL VIEW ──
   if (detailIndex !== null) {
     const a = assignments[detailIndex];
+    const isPastDue = !a.completed && new Date(a.dueDate) < now;
+    const isCompleted = a.completed;
     const detailResourceInputRef = { current: null };
 
     const handleDetailResourceUpload = (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
-      const readers = files.map(file => new Promise(resolve => {
+      Promise.all(files.map(file => new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = (ev) => resolve({ name: file.name, type: file.type, data: ev.target.result, uploadedAt: new Date().toISOString() });
         reader.readAsDataURL(file);
-      }));
-      Promise.all(readers).then(newFiles => {
+      }))).then(newFiles => {
         const updated = [...assignments];
         updated[detailIndex] = { ...updated[detailIndex], resources: [...(updated[detailIndex].resources || []), ...newFiles] };
         setAssignments(updated);
@@ -105,24 +222,82 @@ export default function AssignmentsPage() {
 
     return (
       <div className="asgn-root">
+
+        {/* Celebration overlay */}
+        {celebrating && (
+          <div className="asgn-celebrate">
+            <div className="asgn-celebrate__content">
+              <div className="asgn-celebrate__circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="48" height="48">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <p className="asgn-celebrate__text">Assignment Completed!</p>
+              <p className="asgn-celebrate__sub">Great work! 🎉</p>
+            </div>
+            <div className="asgn-confetti">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className="asgn-confetti__piece" style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 0.5}s`,
+                  backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"][i % 5]
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── NAVBAR ── */}
         <nav className="asgn-nav">
           <span className="asgn-nav__logo" onClick={() => navigate("/dashboard")}>StudyForge</span>
           <button className="asgn-nav__back" onClick={() => setDetailIndex(null)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            Back to Assignments
+            Back
           </button>
         </nav>
 
-        <div className="asgn-header">
-          <h1 className="asgn-header__title">{a.name}</h1>
-          <p className="asgn-header__sub">Due {formatDate(a.dueDate)}</p>
+        {/* ── HEADER ── */}
+        <div className="asgn-header asgn-header--detail">
+          <div>
+            <h1 className={`asgn-header__title ${isPastDue ? "asgn-header__title--red" : ""}`}>{a.name}</h1>
+            <p className="asgn-header__sub">
+              {isCompleted ? `Completed on ${formatDate(a.completedAt)}` : isPastDue ? `Was due ${formatDate(a.dueDate)}` : `Due ${formatDate(a.dueDate)}`}
+            </p>
+          </div>
+
+          <div>
+            {!isCompleted && !isPastDue && (
+              <button className="asgn-complete-btn" onClick={() => markCompleted(detailIndex)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Mark as Completed
+              </button>
+            )}
+            {isCompleted && (
+              <div className="asgn-status-badge asgn-status-badge--done">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Completed
+              </div>
+            )}
+            {isPastDue && (
+              <div className="asgn-status-badge asgn-status-badge--overdue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Past Due
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* ── MAIN ── */}
         <main className="asgn-main">
           <div className="asgn-detail">
-
             <div className="asgn-detail__section">
               <h2 className="asgn-detail__section-title">Details</h2>
               <div className="asgn-detail__card">
@@ -133,8 +308,17 @@ export default function AssignmentsPage() {
                 <div className="asgn-detail__divider" />
                 <div className="asgn-detail__row">
                   <span className="asgn-detail__label">Due Date</span>
-                  <span className="asgn-detail__value">{formatDate(a.dueDate)}</span>
+                  <span className={`asgn-detail__value ${isPastDue ? "asgn-detail__value--red" : ""}`}>{formatDate(a.dueDate)}</span>
                 </div>
+                {isCompleted && (
+                  <>
+                    <div className="asgn-detail__divider" />
+                    <div className="asgn-detail__row">
+                      <span className="asgn-detail__label">Completed On</span>
+                      <span className="asgn-detail__value asgn-detail__value--green">{formatDate(a.completedAt)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -161,35 +345,37 @@ export default function AssignmentsPage() {
                             <line x1="12" y1="15" x2="12" y2="3" />
                           </svg>
                         </a>
-                        <button className="asgn-detail__resource-action asgn-detail__resource-action--delete"
-                          onClick={() => deleteResource(i)}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
-                        </button>
+                        {!isCompleted && (
+                          <button className="asgn-detail__resource-action asgn-detail__resource-action--delete" onClick={() => deleteResource(i)}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-
-              <input type="file" multiple style={{ display: "none" }}
-                ref={el => detailResourceInputRef.current = el}
-                onChange={handleDetailResourceUpload} />
-              <button className="asgn-detail__upload-btn"
-                onClick={() => detailResourceInputRef.current?.click()}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                Upload Resources
-              </button>
+              {!isCompleted && (
+                <>
+                  <input type="file" multiple style={{ display: "none" }}
+                    ref={el => detailResourceInputRef.current = el}
+                    onChange={handleDetailResourceUpload} />
+                  <button className="asgn-detail__upload-btn" onClick={() => detailResourceInputRef.current?.click()}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Upload Resources
+                  </button>
+                </>
+              )}
             </div>
-
           </div>
         </main>
       </div>
@@ -212,112 +398,44 @@ export default function AssignmentsPage() {
       <div className="asgn-header">
         <div>
           <h1 className="asgn-header__title">Assignments</h1>
-          <p className="asgn-header__sub">{assignments.length} assignment{assignments.length !== 1 ? "s" : ""}</p>
+          <p className="asgn-header__sub">{assignments.length} total</p>
         </div>
       </div>
 
+      <TabNav />
+
       <main className="asgn-main">
-        {assignments.length === 0 ? (
-          <div className="asgn-empty" onClick={() => setShowModal(true)}>
-            <div className="asgn-empty__icon">+</div>
-            <p className="asgn-empty__title">No assignments yet</p>
-            <p className="asgn-empty__sub">Click to add your first assignment</p>
-          </div>
-        ) : (
-          <div className="asgn-grid">
-            {assignments.map((a, i) => (
-              <div key={i} className="asgn-card" style={{ animationDelay: `${i * 0.06}s` }}
-                onClick={() => setDetailIndex(i)}>
-                <div className="asgn-card__icon"><AssignmentIcon /></div>
-                <div className="asgn-card__info">
-                  {renameIndex === i ? (
-                    <input className="asgn-rename-input" value={renameName}
-                      onChange={(e) => setRenameName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenameIndex(null); }}
-                      onBlur={confirmRename} autoFocus onClick={(e) => e.stopPropagation()} />
-                  ) : (
-                    <span className="asgn-card__name">{a.name}</span>
-                  )}
-                  <span className="asgn-card__due">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    Due {formatDate(a.dueDate)}
-                  </span>
-                </div>
-                <div className="asgn-card__arrow">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </div>
-                <div className="asgn-card__menu-wrap" ref={openMenuIndex === i ? menuRef : null}>
-                  <button className="asgn-three-dots"
-                    onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === i ? null : i); }}>
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                      <circle cx="5" cy="12" r="1.5" />
-                      <circle cx="12" cy="12" r="1.5" />
-                      <circle cx="19" cy="12" r="1.5" />
-                    </svg>
-                  </button>
-                  {openMenuIndex === i && (
-                    <div className="asgn-dropdown">
-                      <button className="asgn-dropdown__item"
-                        onClick={(e) => { e.stopPropagation(); startRename(i); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        Rename
-                      </button>
-                      <button className="asgn-dropdown__item asgn-dropdown__item--delete"
-                        onClick={(e) => { e.stopPropagation(); deleteAssignment(i); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                        </svg>
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {activeTab === "active" && <CardList list={activeAssignments} />}
+        {activeTab === "completed" && <CardList list={completedAssignments} isCompleted />}
+        {activeTab === "pastdue" && <CardList list={pastDueAssignments} isPastDue />}
       </main>
 
-      <div className="asgn-fab-wrap">
-        <button className="asgn-fab" onClick={() => setShowModal(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
-      </div>
+      {activeTab === "active" && (
+        <div className="asgn-fab-wrap">
+          <button className="asgn-fab" onClick={() => setShowModal(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {showModal && (
         <div className="asgn-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="asgn-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="asgn-modal__title">New Assignment</h2>
             <p className="asgn-modal__sub">Fill in the details for your assignment</p>
-
             <div className="asgn-modal__field">
               <label className="asgn-modal__label">Assignment Name</label>
               <input className="asgn-modal__input" type="text" placeholder="e.g. Data Structures Lab Report"
                 value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
             </div>
-
             <div className="asgn-modal__field">
               <label className="asgn-modal__label">Due Date</label>
               <input className="asgn-modal__input" type="date"
                 value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
             </div>
-
             <div className="asgn-modal__field">
               <label className="asgn-modal__label">Resources</label>
               <button className="asgn-modal__resources-btn" onClick={() => resourceInputRef.current?.click()}>
@@ -340,7 +458,6 @@ export default function AssignmentsPage() {
                 </div>
               )}
             </div>
-
             <div className="asgn-modal__actions">
               <button className="asgn-modal__btn asgn-modal__btn--cancel"
                 onClick={() => { setShowModal(false); setForm({ name: "", dueDate: "", resources: [] }); }}>
