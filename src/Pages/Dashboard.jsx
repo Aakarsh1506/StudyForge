@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import TimetableSection from "./TimetableSection.jsx";
 
 const username = "Aakarsh";
 
@@ -79,33 +80,7 @@ export default function Dashboard() {
       <main className="db-main">
 
         {/* ── LEFT: TIMETABLE ── */}
-        <section className="db-panel db-panel--left">
-          <div className="db-panel__header">
-            <div className="db-date-badge">
-              <span className="db-date-badge__day">{dayNames[today.getDay()]}</span>
-              <span className="db-date-badge__date">
-                {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()}
-              </span>
-            </div>
-          </div>
-
-          {timetableUploaded ? (
-            <>
-              <div className="db-lectures">
-                {/* lecture cards render here once uploaded */}
-              </div>
-              <button className="db-add-btn">
-                <span className="db-add-btn__icon">+</span>
-                Add an Event
-              </button>
-            </>
-          ) : (
-            <div className="db-empty" onClick={() => {}} style={{ cursor: 'pointer' }}>
-              <div className="db-empty__icon">+</div>
-              <p className="db-empty__text">Upload to see your timetable</p>
-            </div>
-          )}
-        </section>
+        <TimetableSection />
 
         {/* ── MIDDLE: ASSIGNMENTS ── */}
         <section className="db-panel db-panel--mid">
@@ -127,7 +102,13 @@ export default function Dashboard() {
                 <div
                   key={i}
                   className="db-assignment-card"
-                  onClick={() => navigate('/assignments', { state: { openIndex: i } })}
+                  onClick={() =>
+                    navigate("/assignments", {
+                      state: {
+                        assignmentId: a.id
+                      }
+                    })
+                }
                   style={{ animationDelay: `${i * 0.08}s`, cursor: 'pointer' }}
                 >
                   <div className="db-assignment-card__left">
