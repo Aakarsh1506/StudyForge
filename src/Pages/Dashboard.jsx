@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
-const assignments = JSON.parse(localStorage.getItem("sf-assignments") || "[]");
 
 const username = "Aakarsh";
 
@@ -13,7 +12,19 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [timetableUploaded] = useState(false);
   const [activeNav, setActiveNav] = useState("Dashboard");
-  const assignments = JSON.parse(localStorage.getItem("sf-assignments") || "[]");
+  const [assignments, setAssignments] = useState(() =>
+    JSON.parse(localStorage.getItem("sf-assignments") || "[]").filter(
+      a => !a.completed && new Date(a.dueDate) >= new Date()
+    )
+  );
+
+  useEffect(() => {
+    setAssignments(
+      JSON.parse(localStorage.getItem("sf-assignments") || "[]").filter(
+        a => !a.completed && new Date(a.dueDate) >= new Date()
+      )
+    );
+  }, []);
 
   return (
     <div className="db-root">
