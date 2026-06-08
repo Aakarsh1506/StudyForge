@@ -4,20 +4,36 @@ import "./NotesPage.css";
 
 export default function NotesPage() {
   const navigate = useNavigate();
-  const [folders, setFolders] = useState(() => JSON.parse(localStorage.getItem("sf-folders") || "[]"));
+  const [userId, setUserId] = useState(null);
+  const [folders, setFolders] = useState([]);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [fabOpen, setFabOpen] = useState(false);
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const [renameIndex, setRenameIndex] = useState(null);
   const [renameName, setRenameName] = useState("");
-  const [openFolder, setOpenFolder] = useState(null); // folder index
-  const [pdfViewer, setPdfViewer] = useState(null); // { name, url }
+  const [openFolder, setOpenFolder] = useState(null);
+  const [pdfViewer, setPdfViewer] = useState(null);
   const menuRef = useRef(null);
   const fileInputRef = useRef(null);
   const folderFileInputRef = useRef(null);
 
-  useEffect(() => { localStorage.setItem("sf-folders", JSON.stringify(folders)); }, [folders]);
+  // ── FETCH USER + LOAD THEIR DATA ──
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(res => { if (!res.ok) navigate("/auth"); return res.json(); })
+      .then(data => {
+        const id = data.user.id;
+        setUserId(id);
+        setFolders(JSON.parse(localStorage.getItem(`sf-folders-${id}`) || "[]"));
+      })
+      .catch(() => navigate("/auth"));
+  }, []);
+
+  // ── SAVE ON CHANGE (only after user is loaded) ──
+  useEffect(() => {
+    if (userId) localStorage.setItem(`sf-folders-${userId}`, JSON.stringify(folders));
+  }, [folders, userId]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -26,6 +42,9 @@ export default function NotesPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Don't render until user is loaded
+  if (!userId) return null;
 
   const createFolder = () => {
     if (!folderName.trim()) return;
@@ -46,7 +65,6 @@ export default function NotesPage() {
     setRenameIndex(null);
   };
 
-  // Upload PDF into a folder
   const handleFolderFileUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length || openFolder === null) return;
@@ -70,7 +88,6 @@ export default function NotesPage() {
     e.target.value = "";
   };
 
-  // Upload notes from subheader (creates loose files, opens first available folder or prompts)
   const handleUploadNotes = () => {
     if (folders.length === 0) { setShowFolderModal(true); return; }
     setOpenFolder(0);
@@ -341,12 +358,10 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── FOOTER ── */}
       <footer className="db-footer">
         <span className="db-footer__logo">StudyForge</span>
         <span className="db-footer__tagline">Your AI-powered study companion</span>
       </footer>
-      
     </div>
   );
 }

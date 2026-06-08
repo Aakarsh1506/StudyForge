@@ -3,19 +3,13 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import TimetableSection from "./TimetableSection.jsx";
 
-const today = new Date();
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("there");
+  const [user, setUser] = useState(null);
   const [activeNav, setActiveNav] = useState("Dashboard");
-  const [assignments, setAssignments] = useState(() =>
-    JSON.parse(localStorage.getItem("sf-assignments") || "[]").filter(
-      a => !a.completed && new Date(a.dueDate) >= new Date()
-    )
-  );
+  const [assignments, setAssignments] = useState([]);
 
   // ── FETCH REAL USER + PROTECT ROUTE ──
   useEffect(() => {
@@ -24,23 +18,30 @@ export default function Dashboard() {
         if (!res.ok) navigate("/auth");
         return res.json();
       })
-      .then(data => setUsername(data.user.name))
-      .catch(() => navigate("/auth"));
-  }, []);
+      .then(data => {
+        const fetchedUser = data.user;
+        setUser(fetchedUser);
 
-  useEffect(() => {
-    setAssignments(
-      JSON.parse(localStorage.getItem("sf-assignments") || "[]").filter(
-        a => !a.completed && new Date(a.dueDate) >= new Date()
-      )
-    );
+        // Load assignments scoped to this user
+        const key = `sf-assignments-${fetchedUser.id}`;
+        const stored = JSON.parse(localStorage.getItem(key) || "[]");
+        setAssignments(
+          stored.filter(a => !a.completed && new Date(a.dueDate) >= new Date())
+        );
+      })
+      .catch(() => navigate("/auth"));
   }, []);
 
   // ── LOGOUT ──
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    setUser(null);
+    setAssignments([]);
     navigate("/auth", { replace: true });
   };
+
+  // Don't render until user is loaded
+  if (!user) return null;
 
   return (
     <div className="db-root">
@@ -69,7 +70,7 @@ export default function Dashboard() {
       {/* ── SUBHEADER ── */}
       <div className="db-subheader">
         <div className="db-subheader__greeting">
-          Hello, <span>{username}</span>
+          Hello, <span>{user.name}</span>
         </div>
         <div className="db-subheader__actions">
           <button className="db-action-btn" onClick={() => navigate('/notes')}>
@@ -94,8 +95,8 @@ export default function Dashboard() {
       {/* ── MAIN GRID ── */}
       <main className="db-main">
 
-        {/* ── LEFT: TIMETABLE ── */}
-        <TimetableSection />
+        {/* ── LEFT: TIMETABLE — pass userId so it scopes its own storage ── */}
+        <TimetableSection userId={user.id} />
 
         {/* ── MIDDLE: ASSIGNMENTS ── */}
         <section className="db-panel db-panel--mid">
@@ -145,7 +146,6 @@ export default function Dashboard() {
             <h2 className="db-panel__title">Quick Access</h2>
           </div>
           <div className="db-quick">
-
             <div className="db-quick-card" onClick={() => navigate('/notes')}>
               <div className="db-quick-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="32" height="32">
@@ -179,7 +179,6 @@ export default function Dashboard() {
               </div>
               <span className="db-quick-card__label">AI Study Planner</span>
             </div>
-
           </div>
         </section>
 
