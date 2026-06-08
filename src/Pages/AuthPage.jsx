@@ -1,25 +1,24 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AuthPage.css";
 import bgImage from "../assets/Background-LandingPage-StudyForge-2.png";
 
 export default function AuthPage() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState("login");
   const [loginStatus, setLoginStatus] = useState({ msg: "", type: "" });
   const [signupStatus, setSignupStatus] = useState({ msg: "", type: "" });
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [signupLoading, setSignupLoading] = useState(false);
 
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [showSignupPw, setShowSignupPw] = useState(false);
   const loginPwTimer = useRef(null);
   const signupPwTimer = useRef(null);
 
-  const [loginForm, setLoginForm] = useState({
-    name: "",
-    collegeName: "",
-    password: "",
-  });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
 
   const [signupForm, setSignupForm] = useState({
     name: "",
@@ -52,28 +51,66 @@ export default function AuthPage() {
     }
   };
 
-  const handleLogin = () => {
-    const { name, collegeName, password } = loginForm;
-    if (!name || !collegeName || !password) {
+  // ── LOGIN ──
+  const handleLogin = async () => {
+    const { email, password } = loginForm;
+    if (!email || !password) {
       setLoginStatus({ msg: "> ERROR: All fields are required.", type: "err" });
       return;
     }
     setLoginLoading(true);
-    setTimeout(() => {
-      setLoginLoading(false);
+    setLoginStatus({ msg: "", type: "" });
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLoginStatus({ msg: `> ERROR: ${data.message}`, type: "err" });
+        setLoginLoading(false);
+        return;
+      }
       setLoginSuccess(true);
       setLoginStatus({ msg: "> Login successful.", type: "ok" });
-    }, 900);
+      setTimeout(() => navigate("/dashboard"), 800);
+    } catch {
+      setLoginStatus({ msg: "> ERROR: Could not connect to server.", type: "err" });
+      setLoginLoading(false);
+    }
   };
 
-  const handleSignup = () => {
+  // ── SIGNUP ──
+  const handleSignup = async () => {
     const { name, email, collegeName, yearOfCollege, branch, password } = signupForm;
     if (!name || !email || !collegeName || !yearOfCollege || !branch || !password) {
       setSignupStatus({ msg: "> ERROR: All fields are required.", type: "err" });
       return;
     }
-    setSignupSuccess(true);
-    setSignupStatus({ msg: "> Account created successfully.", type: "ok" });
+    setSignupLoading(true);
+    setSignupStatus({ msg: "", type: "" });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSignupStatus({ msg: `> ERROR: ${data.message}`, type: "err" });
+        setSignupLoading(false);
+        return;
+      }
+      setSignupSuccess(true);
+      setSignupStatus({ msg: "> Account created successfully.", type: "ok" });
+      setTimeout(() => navigate("/dashboard"), 800);
+    } catch {
+      setSignupStatus({ msg: "> ERROR: Could not connect to server.", type: "err" });
+      setSignupLoading(false);
+    }
   };
 
   const switchMode = (newMode) => {
@@ -83,6 +120,7 @@ export default function AuthPage() {
     setLoginSuccess(false);
     setSignupSuccess(false);
     setLoginLoading(false);
+    setSignupLoading(false);
   };
 
   const EyeOpen = () => (
@@ -106,7 +144,13 @@ export default function AuthPage() {
       <div className="auth-bg" style={{ backgroundImage: `url(${bgImage})` }} />
       <div className="auth-overlay" />
 
-      <div className="auth-logo">StudyForge</div>
+      <div
+        className="auth-logo"
+        onClick={() => navigate("/")}
+        style={{ cursor: "pointer" }}
+      >
+        StudyForge
+      </div>
 
       <div className="auth-card">
 
@@ -132,28 +176,15 @@ export default function AuthPage() {
 
             <div className="field">
               <input
-                type="text"
-                name="name"
-                id="login-name"
+                type="email"
+                name="email"
+                id="login-email"
                 placeholder=" "
-                value={loginForm.name}
+                value={loginForm.email}
                 onChange={handleLoginChange}
                 autoComplete="off"
               />
-              <label htmlFor="login-name">Name</label>
-            </div>
-
-            <div className="field">
-              <input
-                type="text"
-                name="collegeName"
-                id="login-college"
-                placeholder=" "
-                value={loginForm.collegeName}
-                onChange={handleLoginChange}
-                autoComplete="off"
-              />
-              <label htmlFor="login-college">College Name</label>
+              <label htmlFor="login-email">Email ID</label>
             </div>
 
             <div className="field pw-field">
@@ -287,9 +318,9 @@ export default function AuthPage() {
             <button
               className={`auth-submit-btn ${signupSuccess ? "success" : ""}`}
               onClick={handleSignup}
-              disabled={signupSuccess}
+              disabled={signupLoading || signupSuccess}
             >
-              {signupSuccess ? "REGISTERED ✓" : "Sign Up"}
+              {signupSuccess ? "REGISTERED ✓" : signupLoading ? "CREATING ACCOUNT..." : "Sign Up"}
             </button>
 
             <p className="auth-switch">

@@ -306,3 +306,6 @@
     gap: 1rem;
   }
 }
+.auth-logo {
+  cursor: pointer;
+}
