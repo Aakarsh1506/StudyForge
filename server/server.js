@@ -4,6 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const timetableRoutes = require("./routes/timetable");
+const aiRoutes = require("./routes/ai"); 
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(cookieParser());
 // ── ROUTES ──
 app.use("/api/auth", authRoutes);
 app.use("/api/timetable", timetableRoutes);
+app.use("/api/ai", aiRoutes); 
 
 // ── HEALTH CHECK ──
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
