@@ -2,15 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./AssignmentsPage.css";
 
-const STORAGE_KEY = "sf-assignments";
-
-const getAssignments = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-const saveAssignments = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+const getStorageKey = (userId) => `sf-assignments-${userId}`;
+const getAssignments = (userId) => JSON.parse(localStorage.getItem(getStorageKey(userId)) || "[]");
+const saveAssignments = (userId, data) => localStorage.setItem(getStorageKey(userId), JSON.stringify(data));
 
 export default function AssignmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [assignments, setAssignments] = useState(getAssignments);
+  const [userId, setUserId] = useState(null);
+  const [assignments, setAssignments] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", dueDate: "", resources: [] });
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
@@ -22,17 +22,27 @@ export default function AssignmentsPage() {
   const menuRef = useRef(null);
   const resourceInputRef = useRef(null);
 
-  useEffect(() => { saveAssignments(assignments); }, [assignments]);
+  // ── FETCH USER + LOAD THEIR DATA ──
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(res => { if (!res.ok) navigate("/auth"); return res.json(); })
+      .then(data => {
+        const id = data.user.id;
+        setUserId(id);
+        setAssignments(getAssignments(id));
+      })
+      .catch(() => navigate("/auth"));
+  }, []);
+
+  // ── SAVE ON CHANGE (only after user is loaded) ──
+  useEffect(() => {
+    if (userId) saveAssignments(userId, assignments);
+  }, [assignments, userId]);
 
   useEffect(() => {
     if (location.state?.assignmentId) {
-      const index = assignments.findIndex(
-        a => a.id === location.state.assignmentId
-      );
-
-      if (index !== -1) {
-        setDetailIndex(index);
-      }
+      const index = assignments.findIndex(a => a.id === location.state.assignmentId);
+      if (index !== -1) setDetailIndex(index);
     }
   }, [assignments, location.state]);
 
@@ -44,8 +54,10 @@ export default function AssignmentsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const now = new Date();
+  // Don't render until user is loaded
+  if (!userId) return null;
 
+  const now = new Date();
   const activeAssignments = assignments.filter(a => !a.completed && new Date(a.dueDate) >= now);
   const completedAssignments = assignments.filter(a => a.completed);
   const pastDueAssignments = assignments.filter(a => !a.completed && new Date(a.dueDate) < now);
@@ -167,42 +179,29 @@ export default function AssignmentsPage() {
                 </svg>
               </div>
               <div className="asgn-card__menu-wrap" ref={openMenuIndex === globalIndex ? menuRef : null}>
-                  <button className="asgn-three-dots"
-                    onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === globalIndex ? null : globalIndex); }}>
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                      <circle cx="5" cy="12" r="1.5" />
-                      <circle cx="12" cy="12" r="1.5" />
-                      <circle cx="19" cy="12" r="1.5" />
-                    </svg>
-                  </button>
-                  {openMenuIndex === globalIndex && (
-                      <div className="asgn-dropdown">
-
-                        {!isCompleted && (
-                          <button
-                            className="asgn-dropdown__item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startRename(globalIndex);
-                            }}
-                          >
-                            Rename
-                          </button>
-                        )}
-
-                        <button
-                          className="asgn-dropdown__item asgn-dropdown__item--delete"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteAssignment(globalIndex);
-                          }}
-                        >
-                          Delete
-                        </button>
-
-                      </div>
+                <button className="asgn-three-dots"
+                  onClick={(e) => { e.stopPropagation(); setOpenMenuIndex(openMenuIndex === globalIndex ? null : globalIndex); }}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <circle cx="5" cy="12" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="19" cy="12" r="1.5" />
+                  </svg>
+                </button>
+                {openMenuIndex === globalIndex && (
+                  <div className="asgn-dropdown">
+                    {!isCompleted && (
+                      <button className="asgn-dropdown__item"
+                        onClick={(e) => { e.stopPropagation(); startRename(globalIndex); }}>
+                        Rename
+                      </button>
                     )}
-                </div>
+                    <button className="asgn-dropdown__item asgn-dropdown__item--delete"
+                      onClick={(e) => { e.stopPropagation(); deleteAssignment(globalIndex); }}>
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
@@ -240,8 +239,6 @@ export default function AssignmentsPage() {
 
     return (
       <div className="asgn-root">
-
-        {/* Celebration overlay */}
         {celebrating && (
           <div className="asgn-celebrate">
             <div className="asgn-celebrate__content">
@@ -265,7 +262,6 @@ export default function AssignmentsPage() {
           </div>
         )}
 
-        {/* ── NAVBAR ── */}
         <nav className="asgn-nav">
           <span className="asgn-nav__logo" onClick={() => navigate("/dashboard")}>StudyForge</span>
           <button className="asgn-nav__back" onClick={() => setDetailIndex(null)}>
@@ -276,7 +272,6 @@ export default function AssignmentsPage() {
           </button>
         </nav>
 
-        {/* ── HEADER ── */}
         <div className="asgn-header asgn-header--detail">
           <div>
             <h1 className={`asgn-header__title ${isPastDue ? "asgn-header__title--red" : ""}`}>{a.name}</h1>
@@ -284,7 +279,6 @@ export default function AssignmentsPage() {
               {isCompleted ? `Completed on ${formatDate(a.completedAt)}` : isPastDue ? `Was due ${formatDate(a.dueDate)}` : `Due ${formatDate(a.dueDate)}`}
             </p>
           </div>
-
           <div>
             {!isCompleted && !isPastDue && (
               <button className="asgn-complete-btn" onClick={() => markCompleted(detailIndex)}>
@@ -313,7 +307,6 @@ export default function AssignmentsPage() {
           </div>
         </div>
 
-        {/* ── MAIN ── */}
         <main className="asgn-main">
           <div className="asgn-detail">
             <div className="asgn-detail__section">
@@ -489,12 +482,10 @@ export default function AssignmentsPage() {
         </div>
       )}
 
-      {/* ── FOOTER ── */}
       <footer className="db-footer">
         <span className="db-footer__logo">StudyForge</span>
         <span className="db-footer__tagline">Your AI-powered study companion</span>
       </footer>
-      
     </div>
   );
 }
