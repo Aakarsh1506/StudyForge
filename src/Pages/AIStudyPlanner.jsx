@@ -28,7 +28,7 @@ export default function AIStudyPlanner({ onBack }) {
 
       {/* ── NAVBAR ── */}
       <nav className="db-nav">
-        <span className="db-nav__logo">StudyForge</span>
+        <span className="db-nav__logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>StudyForge</span>
         <div className="db-nav__links">
           {["Notes", "Assignment Tracker", "AI Study Planner"].map((item) => (
             <button
@@ -182,6 +182,13 @@ export default function AIStudyPlanner({ onBack }) {
         </div>
 
       </div>
+
+      {/* ── FOOTER ── */}
+      <footer className="db-footer">
+        <span className="db-footer__logo">StudyForge</span>
+        <span className="db-footer__tagline">Your AI-powered study companion</span>
+      </footer>
+
     </div>
   );
 }
