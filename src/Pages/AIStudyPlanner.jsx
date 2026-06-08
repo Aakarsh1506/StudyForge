@@ -1,51 +1,72 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AIStudyPlanner.css";
 
-export default function AIStudyPlanner({ onBack }) {
+export default function AIStudyPlanner() {
   const navigate = useNavigate();
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      text: "Hi! I'm your AI Study Assistant. I can help you plan your study schedule, generate quizzes, or create flashcards. Backend coming soon — stay tuned! 🚀",
+      text: "Hi! I'm your AI Study Assistant 👋 Ask me anything academic — concepts, exam prep, study tips, or help understanding your notes. Study-focused only!",
     },
   ]);
+  const [loading, setLoading] = useState(false);
+  const [remaining, setRemaining] = useState(15);
+  const [limitHit, setLimitHit] = useState(false);
+  const bottomRef = useRef(null);
 
-  const handleSend = () => {
-    if (!chatInput.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text: chatInput.trim() },
-      { role: "ai", text: "AI backend is not connected yet. This feature will be live soon!" },
-    ]);
+  const handleSend = async () => {
+    if (!chatInput.trim() || loading || limitHit) return;
+    const userMsg = chatInput.trim();
     setChatInput("");
+    setMessages(prev => [...prev, { role: "user", text: userMsg }]);
+    setLoading(true);
+    try {
+      const history = messages.map(m => ({ role: m.role, text: m.text }));
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: userMsg, history }),
+      });
+      const data = await res.json();
+      if (res.status === 429) {
+        setLimitHit(true);
+        setMessages(prev => [...prev, { role: "ai", text: data.error }]);
+        return;
+      }
+      if (!res.ok) throw new Error(data.error);
+      setRemaining(data.remaining);
+      setMessages(prev => [...prev, { role: "ai", text: data.reply }]);
+    } catch (e) {
+      setMessages(prev => [...prev, { role: "ai", text: "Something went wrong. Please try again." }]);
+    } finally {
+      setLoading(false);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
   };
 
   return (
     <div className="asp-root">
-      {/* ── UPDATED NAVBAR ── */}
       <nav className="db-nav">
         <span className="db-nav__logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>
           StudyForge
         </span>
-        
-        {/* Only kept the back button */}
         <button className="db-nav__logout" onClick={() => navigate("/dashboard")}>
           &lt; Back to Dashboard
         </button>
       </nav>
 
-      {/* ── SUBHEADER ── */}
       <div className="db-subheader">
         <div className="db-subheader__greeting">
           AI <span>Study Planner</span>
         </div>
       </div>
 
-      {/* ── MAIN LAYOUT ── */}
       <div className="asp-main">
         <div className="asp-tools">
+
           <div className="asp-tool-card">
             <div className="asp-tool-card__icon asp-tool-card__icon--quiz">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="28" height="28">
@@ -59,7 +80,9 @@ export default function AIStudyPlanner({ onBack }) {
               <p className="asp-tool-card__desc">Upload your notes and instantly generate a custom quiz.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>Generate<span className="asp-badge">Soon</span></button>
+              <button className="asp-btn asp-btn--primary" onClick={() => navigate("/quiz")}>
+                Generate
+              </button>
             </div>
           </div>
 
@@ -74,7 +97,9 @@ export default function AIStudyPlanner({ onBack }) {
               <p className="asp-tool-card__desc">Turn study material into bite-sized flashcards.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>Create<span className="asp-badge">Soon</span></button>
+              <button className="asp-btn asp-btn--primary" onClick={() => navigate("/flashcards")}>
+                Create
+              </button>
             </div>
           </div>
 
@@ -93,9 +118,12 @@ export default function AIStudyPlanner({ onBack }) {
               <p className="asp-tool-card__desc">Get a personalized, AI-generated study schedule.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>Build<span className="asp-badge">Soon</span></button>
+              <button className="asp-btn asp-btn--primary" onClick={() => navigate("/planner")}>
+                Build
+              </button>
             </div>
           </div>
+
         </div>
 
         <div className="asp-chat">
@@ -107,7 +135,7 @@ export default function AIStudyPlanner({ onBack }) {
             </div>
             <div>
               <div className="asp-chat__title">AI Assistant</div>
-              <div className="asp-chat__subtitle">Powered by Ollama</div>
+              <div className="asp-chat__subtitle">{remaining} messages left today</div>
             </div>
           </div>
           <div className="asp-chat__messages">
@@ -117,17 +145,27 @@ export default function AIStudyPlanner({ onBack }) {
                 <div className="asp-msg__bubble">{msg.text}</div>
               </div>
             ))}
+            {loading && (
+              <div className="asp-msg asp-msg--ai">
+                <div className="asp-msg__avatar">SF</div>
+                <div className="asp-msg__bubble asp-msg__bubble--typing">
+                  <span/><span/><span/>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
           </div>
           <div className="asp-chat__input-row">
             <input
               className="asp-chat__input"
               type="text"
-              placeholder="Ask anything…"
+              placeholder={limitHit ? "Daily limit reached. Come back tomorrow!" : "Ask anything academic…"}
               value={chatInput}
+              disabled={limitHit}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
             />
-            <button className="asp-chat__send" onClick={handleSend}>
+            <button className="asp-chat__send" onClick={handleSend} disabled={loading || limitHit}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
