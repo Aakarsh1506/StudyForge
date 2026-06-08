@@ -5,6 +5,7 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import NotesPage from './pages/NotesPage';
 import AssignmentsPage from './pages/AssignmentsPage';
+import AIStudyPlanner from './pages/AIStudyPlanner';   // ← add this
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/assignments" element={<AssignmentsPage />} />
+        <Route path="/study-planner" element={<AIStudyPlanner />} />  {/* ← add this */}
       </Routes>
     </BrowserRouter>
   );
