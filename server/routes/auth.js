@@ -4,11 +4,12 @@ const rateLimit = require("express-rate-limit");
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// Rate limiter — max 3 attempts per 3 hours per IP
 const authLimiter = rateLimit({
-  windowMs: 3 * 60 * 60 * 1000,
-  max: 3,
-  message: { message: "Too many attempts. Please try again after 3 hours." },
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10,
+  message: {
+    message: "Too many attempts. Please try again after 5 minutes."
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
