@@ -644,3 +644,27 @@ body {
 .db-quick-card:hover .db-quick-card__icon--ai {
   background: rgba(104, 211, 145, 0.22);
 }
+
+/* ── FOOTER ── */
+.db-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem 2.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.db-footer__logo {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--blue-light);
+  letter-spacing: -0.03em;
+}
+
+.db-footer__tagline {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}

@@ -169,6 +169,13 @@ export default function Dashboard() {
         </section>
 
       </main>
+
+      {/* ── FOOTER ── */}
+      <footer className="db-footer">
+        <span className="db-footer__logo">StudyForge</span>
+        <span className="db-footer__tagline">Your AI-powered study companion</span>
+      </footer>
+      
     </div>
   );
 }
