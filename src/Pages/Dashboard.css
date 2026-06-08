@@ -634,3 +634,13 @@ body {
   background: rgba(255, 80, 80, 0.15);
   color: #ff6b6b;
 }
+
+/* AI Study Planner quick card icon */
+.db-quick-card__icon--ai {
+  background: rgba(104, 211, 145, 0.12);
+  color: #68d391;
+}
+
+.db-quick-card:hover .db-quick-card__icon--ai {
+  background: rgba(104, 211, 145, 0.22);
+}
