@@ -4,7 +4,6 @@ import "./AIStudyPlanner.css";
 
 export default function AIStudyPlanner({ onBack }) {
   const navigate = useNavigate();
-  const [activeNav, setActiveNav] = useState("AI Study Planner");
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -25,26 +24,16 @@ export default function AIStudyPlanner({ onBack }) {
 
   return (
     <div className="asp-root">
-
-      {/* ── NAVBAR ── */}
+      {/* ── UPDATED NAVBAR ── */}
       <nav className="db-nav">
-        <span className="db-nav__logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>StudyForge</span>
-        <div className="db-nav__links">
-          {["Notes", "Assignment Tracker", "AI Study Planner"].map((item) => (
-            <button
-              key={item}
-              className={`db-nav__link ${activeNav === item ? "active" : ""}`}
-              onClick={() => {
-                if (item === "Notes") navigate("/notes");
-                else if (item === "Assignment Tracker") navigate("/assignments");
-                else setActiveNav(item);
-              }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-        <button className="db-nav__logout">Logout</button>
+        <span className="db-nav__logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>
+          StudyForge
+        </span>
+        
+        {/* Only kept the back button */}
+        <button className="db-nav__logout" onClick={() => navigate("/dashboard")}>
+          &lt; Back to Dashboard
+        </button>
       </nav>
 
       {/* ── SUBHEADER ── */}
@@ -52,21 +41,11 @@ export default function AIStudyPlanner({ onBack }) {
         <div className="db-subheader__greeting">
           AI <span>Study Planner</span>
         </div>
-        <button className="db-action-btn" onClick={() => navigate("/dashboard")}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Back to Dashboard
-        </button>
       </div>
 
       {/* ── MAIN LAYOUT ── */}
       <div className="asp-main">
-
-        {/* LEFT 75% — Four vertical sections */}
         <div className="asp-tools">
-
-          {/* 1 — AI Quiz Generator */}
           <div className="asp-tool-card">
             <div className="asp-tool-card__icon asp-tool-card__icon--quiz">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="28" height="28">
@@ -77,19 +56,13 @@ export default function AIStudyPlanner({ onBack }) {
             </div>
             <div className="asp-tool-card__body">
               <h3 className="asp-tool-card__title">AI Quiz Generator</h3>
-              <p className="asp-tool-card__desc">
-                Upload your notes and instantly generate a custom quiz to test your understanding.
-              </p>
+              <p className="asp-tool-card__desc">Upload your notes and instantly generate a custom quiz.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>
-                Generate Quiz
-                <span className="asp-badge">Soon</span>
-              </button>
+              <button className="asp-btn asp-btn--primary" disabled>Generate<span className="asp-badge">Soon</span></button>
             </div>
           </div>
 
-          {/* 2 — AI Flashcard Generator */}
           <div className="asp-tool-card">
             <div className="asp-tool-card__icon asp-tool-card__icon--flash">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="28" height="28">
@@ -98,19 +71,13 @@ export default function AIStudyPlanner({ onBack }) {
             </div>
             <div className="asp-tool-card__body">
               <h3 className="asp-tool-card__title">AI Flashcard Generator</h3>
-              <p className="asp-tool-card__desc">
-                Turn your study material into bite-sized flashcards for faster memorization and revision.
-              </p>
+              <p className="asp-tool-card__desc">Turn study material into bite-sized flashcards.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>
-                Create Flashcards
-                <span className="asp-badge">Soon</span>
-              </button>
+              <button className="asp-btn asp-btn--primary" disabled>Create<span className="asp-badge">Soon</span></button>
             </div>
           </div>
 
-          {/* 3 — AI Study Planner */}
           <div className="asp-tool-card">
             <div className="asp-tool-card__icon asp-tool-card__icon--plan">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="28" height="28">
@@ -123,21 +90,14 @@ export default function AIStudyPlanner({ onBack }) {
             </div>
             <div className="asp-tool-card__body">
               <h3 className="asp-tool-card__title">AI Study Planner</h3>
-              <p className="asp-tool-card__desc">
-                Get a personalized, AI-generated weekly study schedule based on your subjects and deadlines.
-              </p>
+              <p className="asp-tool-card__desc">Get a personalized, AI-generated study schedule.</p>
             </div>
             <div className="asp-tool-card__actions">
-              <button className="asp-btn asp-btn--primary" disabled>
-                Build My Plan
-                <span className="asp-badge">Soon</span>
-              </button>
+              <button className="asp-btn asp-btn--primary" disabled>Build<span className="asp-badge">Soon</span></button>
             </div>
           </div>
-
         </div>
 
-        {/* RIGHT 25% — Chat UI */}
         <div className="asp-chat">
           <div className="asp-chat__header">
             <div className="asp-chat__header-icon">
@@ -147,27 +107,22 @@ export default function AIStudyPlanner({ onBack }) {
             </div>
             <div>
               <div className="asp-chat__title">AI Assistant</div>
-              <div className="asp-chat__subtitle">Powered by Ollama · Coming soon</div>
+              <div className="asp-chat__subtitle">Powered by Ollama</div>
             </div>
-            <div className="asp-chat__status-dot" />
           </div>
-
           <div className="asp-chat__messages">
             {messages.map((msg, i) => (
               <div key={i} className={`asp-msg asp-msg--${msg.role}`}>
-                {msg.role === "ai" && (
-                  <div className="asp-msg__avatar">SF</div>
-                )}
+                {msg.role === "ai" && <div className="asp-msg__avatar">SF</div>}
                 <div className="asp-msg__bubble">{msg.text}</div>
               </div>
             ))}
           </div>
-
           <div className="asp-chat__input-row">
             <input
               className="asp-chat__input"
               type="text"
-              placeholder="Ask anything… (backend soon)"
+              placeholder="Ask anything…"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -180,15 +135,12 @@ export default function AIStudyPlanner({ onBack }) {
             </button>
           </div>
         </div>
-
       </div>
 
-      {/* ── FOOTER ── */}
       <footer className="db-footer">
         <span className="db-footer__logo">StudyForge</span>
         <span className="db-footer__tagline">Your AI-powered study companion</span>
       </footer>
-
     </div>
   );
 }
