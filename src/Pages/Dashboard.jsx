@@ -3,20 +3,30 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import TimetableSection from "./TimetableSection.jsx";
 
-const username = "Aakarsh";
-
 const today = new Date();
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [username, setUsername] = useState("there");
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [assignments, setAssignments] = useState(() =>
     JSON.parse(localStorage.getItem("sf-assignments") || "[]").filter(
       a => !a.completed && new Date(a.dueDate) >= new Date()
     )
   );
+
+  // ── FETCH REAL USER + PROTECT ROUTE ──
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(res => {
+        if (!res.ok) navigate("/auth");
+        return res.json();
+      })
+      .then(data => setUsername(data.user.name))
+      .catch(() => navigate("/auth"));
+  }, []);
 
   useEffect(() => {
     setAssignments(
@@ -26,12 +36,18 @@ export default function Dashboard() {
     );
   }, []);
 
+  // ── LOGOUT ──
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    navigate("/auth", { replace: true });
+  };
+
   return (
     <div className="db-root">
 
       {/* ── NAVBAR ── */}
       <nav className="db-nav">
-        <span className="db-nav__logo">StudyForge</span>
+        <span className="db-nav__logo" onClick={() => navigate("/dashboard")} style={{ cursor: "pointer" }}>StudyForge</span>
         <div className="db-nav__links">
           {["Notes", "Assignment Tracker", "AI Study Planner"].map((item) => (
             <button
@@ -47,7 +63,7 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-        <button className="db-nav__logout">Logout</button>
+        <button className="db-nav__logout" onClick={handleLogout}>Logout</button>
       </nav>
 
       {/* ── SUBHEADER ── */}
@@ -153,7 +169,6 @@ export default function Dashboard() {
               <span className="db-quick-card__label">Add & Upload Assignments</span>
             </div>
 
-            {/* ── NEW: AI Study Planner card ── */}
             <div className="db-quick-card" onClick={() => navigate('/study-planner')}>
               <div className="db-quick-card__icon db-quick-card__icon--ai">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="32" height="32">
@@ -175,7 +190,7 @@ export default function Dashboard() {
         <span className="db-footer__logo">StudyForge</span>
         <span className="db-footer__tagline">Your AI-powered study companion</span>
       </footer>
-      
+
     </div>
   );
 }
