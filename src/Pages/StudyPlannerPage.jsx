@@ -14,7 +14,7 @@ export default function StudyPlannerPage() {
   const [viewingPlan, setViewingPlan] = useState(null);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, { credentials: "include" })
       .then(r => { if (!r.ok) navigate("/auth"); return r.json(); })
       .then(d => {
         setUserId(d.user.id);

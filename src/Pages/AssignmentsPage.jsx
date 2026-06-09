@@ -24,7 +24,7 @@ export default function AssignmentsPage() {
 
   // ── FETCH USER + LOAD THEIR DATA ──
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, { credentials: "include" })
       .then(res => { if (!res.ok) navigate("/auth"); return res.json(); })
       .then(data => {
         const id = data.user.id;

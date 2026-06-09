@@ -24,10 +24,10 @@ export default function AIStudyPlanner() {
     setLoading(true);
     try {
       const history = messages.map(m => ({ role: m.role, text: m.text }));
-      const res = await fetch("/api/ai/chat", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // Required to send the session cookie
         body: JSON.stringify({ message: userMsg, history }),
       });
       const data = await res.json();
