@@ -22,7 +22,7 @@ export default function TimetableSection({ userId }) {
 
   const fetchTimetable = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/timetable", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/timetable`, {
         withCredentials: true,
       });
       setLectures(res.data);
@@ -38,7 +38,7 @@ export default function TimetableSection({ userId }) {
     }
 
     try {
-      const res = await axios.post("http://localhost:5001/api/timetable", formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/timetable`, formData, {
         withCredentials: true,
       });
 
@@ -58,7 +58,7 @@ export default function TimetableSection({ userId }) {
 
   const deleteEvent = async (id) => {
     try {
-      await axios.delete(`http://localhost:5001/api/timetable/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/timetable/${id}`, {
         withCredentials: true,
       });
       setLectures(lectures.filter((lecture) => lecture.id !== id));
@@ -74,7 +74,7 @@ export default function TimetableSection({ userId }) {
     if (!confirmReset) return;
 
     try {
-      await axios.delete("http://localhost:5001/api/timetable/clear-all", {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/timetable/clear-all`, {
         withCredentials: true,
       });
       setLectures([]);
@@ -94,7 +94,7 @@ export default function TimetableSection({ userId }) {
     data.append("file", file);
 
     try {
-      await axios.post("http://localhost:5001/api/timetable/upload", data, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/timetable/upload`, data, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" }
       });
