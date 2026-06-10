@@ -39,7 +39,7 @@ export default function FlashcardsPage() {
     try {
       const fd = new FormData();
       fd.append("pdf", pdf); fd.append("numCards", numCards);
-      const res = await fetch("/api/ai/flashcards", { method: "POST", body: fd, credentials: "include" });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/flashcards`, { method: "POST", body: fd, credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setCards(data.flashcards);

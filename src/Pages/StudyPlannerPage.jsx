@@ -34,7 +34,7 @@ export default function StudyPlannerPage() {
     if (!form.subjects || !form.examDate) return setError("Subjects and exam date are required.");
     setLoading(true); setError(""); setPlan(null);
     try {
-      const res = await fetch("/api/ai/study-plan", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/study-plan`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         credentials: "include", body: JSON.stringify(form),
       });

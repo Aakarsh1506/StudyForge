@@ -52,7 +52,7 @@ export default function QuizPage() {
   const [viewingResult, setViewingResult] = useState(null);
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, { credentials: "include" })
       .then(r => { if (!r.ok) navigate("/auth"); return r.json(); })
       .then(d => {
         setUserId(d.user.id);
@@ -72,7 +72,7 @@ export default function QuizPage() {
     try {
       const fd = new FormData();
       fd.append("pdf", pdf); fd.append("numQuestions", numQ); fd.append("difficulty", diff);
-      const res = await fetch("/api/ai/quiz", { method: "POST", body: fd, credentials: "include" });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/quiz`, { method: "POST", body: fd, credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setQuiz(data.questions);
